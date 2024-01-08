@@ -732,7 +732,7 @@ static void (*const sTextPrinterTasks[])(u8 taskId) =
 static const u8 sMemoNatureTextColor[] = _("{COLOR LIGHT_RED}{SHADOW GREEN}");
 static const u8 sMemoMiscTextColor[] = _("{COLOR WHITE}{SHADOW DARK_GRAY}"); // This is also affected by palettes, apparently
 static const u8 sStatsLeftColumnLayout[] = _("{DYNAMIC 0}/{DYNAMIC 1}\n{DYNAMIC 2}\n{DYNAMIC 3}");
-static const u8 sStatsLeftColumnLayoutIVEV[] = _("{DYNAMIC 0}\n{DYNAMIC 1}\n{DYNAMIC 2}"); // IVS Y EVS
+static const u8 sStatsLeftColumnLayoutIVEV[] = _("{DYNAMIC 0}\n{DYNAMIC 1}\n{DYNAMIC 2}");
 static const u8 sStatsRightColumnLayout[] = _("{DYNAMIC 0}\n{DYNAMIC 1}\n{DYNAMIC 2}");
 static const u8 sMovesPPLayout[] = _("{PP}{DYNAMIC 0}/{DYNAMIC 1}");
 
@@ -1606,9 +1606,10 @@ static void CloseSummaryScreen(u8 taskId)
         DestroyTask(taskId);
     }
 }
+//IVS Y EVS
 
-// IVS Y EVS
-// // Cycle summary page between stats, IVs and EVs
+
+// Cycle summary page between stats, IVs and EVs
 static void ChangeSummaryState (s16 *taskData, u8 taskId)
 {
     switch (taskData[3])
@@ -1625,11 +1626,12 @@ static void ChangeSummaryState (s16 *taskData, u8 taskId)
     }
     gTasks[taskId].func = Task_HandleInput;
 }
-// IVS Y EVS
 
+//IVS Y EVS
 static void Task_HandleInput(u8 taskId)
 {
-       s16 *data = gTasks[taskId].data;
+    s16 *data = gTasks[taskId].data;
+
     if (MenuHelpers_ShouldWaitForLinkRecv() != TRUE && !gPaletteFade.active)
     {
         if (JOY_NEW(DPAD_UP))
@@ -1656,8 +1658,7 @@ static void Task_HandleInput(u8 taskId)
         {
             if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS)
             {
-
-            // Cycle through IVs/EVs/stats on pressing A
+                // Cycle through IVs/EVs/stats on pressing A
                 ChangeSummaryState(data, taskId);
                 BufferIvOrEvStats(data[3]);
             }
@@ -1672,38 +1673,15 @@ static void Task_HandleInput(u8 taskId)
                 PlaySE(SE_SELECT);
                 SwitchToMoveSelection(taskId);
             }
-    
         }
+
+    }
         else if (JOY_NEW(B_BUTTON))
         {
             StopPokemonAnimations();
             PlaySE(SE_SELECT);
             BeginCloseSummaryScreen(taskId);
         }
-
-        // show IVs/EVs/stats on button presses
-        else if (gMain.newKeys & R_BUTTON)
-        {
-            if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS)
-            {
-                BufferIvOrEvStats(0);
-            }
-        }
-        else if (gMain.newKeys & L_BUTTON)
-        {
-            if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS)
-            {
-                BufferIvOrEvStats(1);
-            }
-        }
-        else if (gMain.newKeys & START_BUTTON)
-        {
-            if (sMonSummaryScreen->currPageIndex == PSS_PAGE_SKILLS)
-            {
-                BufferIvOrEvStats(2);
-            }
-        }
-
     #if DEBUG_POKEMON_MENU == TRUE
         else if (JOY_NEW(SELECT_BUTTON) && !gMain.inBattle)
         {
@@ -3545,8 +3523,8 @@ static void BufferStat(u8 *dst, s8 natureMod, u32 stat, u32 strId, u32 n)
     ConvertIntToDecimalStringN(txtPtr, stat, STR_CONV_MODE_RIGHT_ALIGN, n);
     DynamicPlaceholderTextUtil_SetPlaceholderPtr(strId, dst);
 }
+// IVS Y EVS
 
-//EVS Y IVS
 static void BufferIvOrEvStats(u8 mode)
 {
     u16 hp, hp2, atk, def, spA, spD, spe;
@@ -3624,7 +3602,8 @@ static void BufferIvOrEvStats(u8 mode)
 
     Free(currHPString);
 }
-//IVS Y EVS
+
+// IVS Y EVS
 static void BufferLeftColumnStats(void)
 {
     u8 *currentHPString = Alloc(20);

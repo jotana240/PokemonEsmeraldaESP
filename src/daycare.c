@@ -25,6 +25,7 @@
 #include "constants/hold_effects.h"
 #include "constants/moves.h"
 #include "constants/region_map_sections.h"
+#include "constants/hold_effects.h" //Cría de objetos de poder y nudos del destino 
 
 #define IS_DITTO(species) (gSpeciesInfo[species].eggGroups[0] == EGG_GROUP_DITTO || gSpeciesInfo[species].eggGroups[1] == EGG_GROUP_DITTO)
 
@@ -579,7 +580,7 @@ static void RemoveIVIndexFromList(u8 *ivs, u8 selectedIv)
             ivs[j++] = temp[i];
     }
 }
-
+/*
 static void InheritIVs(struct Pokemon *egg, struct DayCare *daycare)
 {
     u16 motherItem = GetBoxMonData(&daycare->mons[0].mon, MON_DATA_HELD_ITEM);
@@ -682,6 +683,94 @@ static void InheritIVs(struct Pokemon *egg, struct DayCare *daycare)
         }
     }
 }
+*/
+////Cría de objetos de poder y nudos del destino 
+
+static void InheritIVs(struct Pokemon *egg, struct DayCare *daycare)
+{
+    u8 i, j, k, index;
+    u8 selectedIvs[INHERITED_IV_DESTINY_KNOT_COUNT];
+    u8 availableIVs[NUM_STATS];
+    u8 whichParents[INHERITED_IV_DESTINY_KNOT_COUNT];
+    u8 iv;
+	u8 inheritedN = INHERITED_IV_COUNT;
+
+    // Initialize a list of IV indices.
+    for (i = 0; i < NUM_STATS; i++)
+    {
+        availableIVs[i] = i;
+    }
+
+    // search for power items or destiny knot
+	k = 0;
+    for (i = 0; i < DAYCARE_MON_COUNT; i++)
+    { 
+                u16 item = GetBoxMonData(&daycare->mons[i].mon, MON_DATA_HELD_ITEM);
+		if (gItems[item].holdEffect == HOLD_EFFECT_POWER_ITEM)
+		{
+			index = gItems[item].secondaryId;
+			for (j = 0; j <= index; j++)
+				if (availableIVs[j] == index)
+				{
+					selectedIvs[k] = index;
+					RemoveIVIndexFromList(availableIVs, index);
+					whichParents[k] = i;
+					k++;
+					break;
+				}
+		}
+		else if (gItems[item].holdEffect == HOLD_EFFECT_DESTINY_KNOT)
+			inheritedN = INHERITED_IV_DESTINY_KNOT_COUNT;
+    }
+	
+    // Select the 1-5 remaining IVs that will be inherited randomly.
+    for (i = k; i < inheritedN; i++)
+    {
+        index = Random() % (NUM_STATS - i);
+        selectedIvs[i] = availableIVs[index];
+        RemoveIVIndexFromList(availableIVs, index);
+    }
+
+    // Determine which parent each of the random IVs should inherit from.
+    for (i = k; i < inheritedN; i++)
+    {
+        whichParents[i] = Random() % DAYCARE_MON_COUNT;
+    }
+
+    // Set each of inherited IVs on the egg mon.
+    for (i = 0; i < inheritedN; i++)
+    {
+        switch (selectedIvs[i])
+        {
+            case 0:
+                iv = GetBoxMonData(&daycare->mons[whichParents[i]].mon, MON_DATA_HP_IV);
+                SetMonData(egg, MON_DATA_HP_IV, &iv);
+                break;
+            case 1:
+                iv = GetBoxMonData(&daycare->mons[whichParents[i]].mon, MON_DATA_ATK_IV);
+                SetMonData(egg, MON_DATA_ATK_IV, &iv);
+                break;
+            case 2:
+                iv = GetBoxMonData(&daycare->mons[whichParents[i]].mon, MON_DATA_DEF_IV);
+                SetMonData(egg, MON_DATA_DEF_IV, &iv);
+                break;
+            case 3:
+                iv = GetBoxMonData(&daycare->mons[whichParents[i]].mon, MON_DATA_SPEED_IV);
+                SetMonData(egg, MON_DATA_SPEED_IV, &iv);
+                break;
+            case 4:
+                iv = GetBoxMonData(&daycare->mons[whichParents[i]].mon, MON_DATA_SPATK_IV);
+                SetMonData(egg, MON_DATA_SPATK_IV, &iv);
+                break;
+            case 5:
+                iv = GetBoxMonData(&daycare->mons[whichParents[i]].mon, MON_DATA_SPDEF_IV);
+                SetMonData(egg, MON_DATA_SPDEF_IV, &iv);
+                break;
+        }
+    }
+}
+
+////Cría de objetos de poder y nudos del destino 
 
 static void InheritPokeball(struct Pokemon *egg, struct BoxPokemon *father, struct BoxPokemon *mother)
 {
